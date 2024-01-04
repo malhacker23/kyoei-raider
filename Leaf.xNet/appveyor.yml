@@ -1,0 +1,56 @@
+version: 5.2.{build}
+branches:
+  only:
+  - master
+skip_tags: true
+image: Visual Studio 2019
+configuration: Release
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  version: '{version}'
+  package_version: '{version}'
+  assembly_version: '{version}'
+  file_version: '{version}'
+  informational_version: '{version}'
+environment:
+  nuget_token:
+    secure: BzdLe9enAWcmUiOBMdx02CYt2T+xuLGlvieE2+Ceic8tmFpEb06EOlikWdyOxxbf
+  github_token:
+    secure: 2LiLyCv5qwnAClSid16P+Yiq+zIyBk+6/Xl1ZDOKz5g6ab2vXosiY3m93n52q1WX
+nuget:
+  account_feed: true
+  project_feed: true
+before_build:
+- cmd: nuget restore .\Leaf.xNet.sln
+build:
+  project: Leaf.xNet.sln
+  publish_nuget: true
+  verbosity: minimal
+artifacts:
+- path: Leaf.xNet\bin\Release\net45
+  name: Leaf.xNet_v$(appveyor_build_version)__NET_Framework_4.5
+- path: Leaf.xNet\bin\Release\netstandard2.0
+  name: Leaf.xNet_v$(appveyor_build_version)__NET_Standard_2.0
+deploy:
+- provider: NuGet
+  api_key:
+    secure: BzdLe9enAWcmUiOBMdx02CYt2T+xuLGlvieE2+Ceic8tmFpEb06EOlikWdyOxxbf
+  skip_symbols: true
+  on:
+    branch: master
+- provider: GitHub
+  tag: v$(appveyor_build_version)
+  release: Leaf.xNet v$(appveyor_build_version)
+  auth_token:
+    secure: NQtMOO3yB309cDK/pFWRiQ==
+  artifact: Leaf.xNet_v$(appveyor_build_version)__NET_Framework_4.5;Leaf.xNet_v$(appveyor_build_version)__NET_Standard_2.0
+  on:
+    branch: master
+only_commits:
+  files:
+    - appveyor.yml
+    - Leaf.xNet.sln
+    - Leaf.xNet/Leaf.xNet.csproj
+    - Leaf.xNet/**/*.cs
+    - Leaf.xNet/**/*.resx
